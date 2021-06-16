@@ -160,8 +160,6 @@ public class OBMetaProducer extends JavaPlugin {
 	}
 
 	public void Register() {
-//		wu = new WeaponUtil(this);
-//		wl = new WeaponListener(this);
-//		this.getCommand("mw").setExecutor(mwCE);
+
 	}
 }
