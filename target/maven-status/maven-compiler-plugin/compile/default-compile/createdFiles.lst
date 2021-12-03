@@ -1,4 +1,4 @@
-net\obmc\OBMetaProducerBukkit\OBMetaProducer.class
-net\obmc\OBMetaProducerBukkit\OBMetaTask.class
-net\obmc\OBMetaProducerBukkit\OBMetaLoader.class
-net\obmc\OBMetaProducerBukkit\OBMetaProducer$1.class
+net/obmc/OBMetaProducerBukkit/OBMetaTask.class
+net/obmc/OBMetaProducerBukkit/OBMetaProducer.class
+net/obmc/OBMetaProducerBukkit/OBMetaLoader.class
+net/obmc/OBMetaProducerBukkit/OBMetaProducer$1.class
