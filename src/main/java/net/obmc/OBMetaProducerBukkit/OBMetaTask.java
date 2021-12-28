@@ -12,8 +12,7 @@ public class OBMetaTask extends BukkitRunnable {
     }
 	@Override
 	public void run() {
-        plugin.getServer().broadcastMessage("Welcome to OB-Minecraft! We build! and play Skywars!");
-
+        plugin.getServer().broadcastMessage("Welcome to OB-Minecraft! We play, we build!");
 	}
 
 	

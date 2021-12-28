@@ -14,37 +14,30 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitScheduler;
 
-import net.obmc.OBMetaProducerBukkit.OBMetaLoader;
-
 
 public class OBMetaProducer extends JavaPlugin {
 	
 	Logger log = Logger.getLogger("Minecraft");
 
-	public OBMetaLoader mlc;
 	private String metafile;
 	private Boolean obsfucate;
 	private Integer range;
+	private Boolean fault = false;
 	public static String program = "OBMetaProducerBukkit";
 	
 	PrintWriter pw = null;
 
 	@Override
 	public void onEnable() {
-		//Bukkit.getLogger().info("[OBMetaProducer] Plugin loaded");
 		
-		if (!manageConfigs()) {
-			return;
-		}
-
 		/**
 		 * Initialize Stuff
 		 */
-		Initialize();
+		initializeStuff();
 		/**
 		 * Register stuff
 		 */
-		Register();
+		registerStuff();
 		/**
 		 * Output message
 		 */
@@ -59,22 +52,31 @@ public class OBMetaProducer extends JavaPlugin {
             @Override
             public void run() {
             	
+            	// indicates if we have an issue at any point
+            	fault = false;
+            	
         		// open the meta file for writing
         		File mfile = new File(metafile);
-        		FileWriter writer;
         		try {
-        			writer = new FileWriter(mfile, false);
-        			pw = new PrintWriter(writer);
-        		} catch(IOException e) {
-        			e.printStackTrace();
+					mfile.createNewFile();
+				} catch (IOException e) {
+					log.log(Level.INFO, "[" + program + "] Failed to create metafile: (" + metafile + ")");
+					log.log(Level.INFO, "[" + program + "] Please check the path and filename in the config is correct");
+					fault = true;
+				}
+        		FileWriter writer;
+        		if (!fault) {
+        			try {
+        				writer = new FileWriter(mfile, false);
+        				pw = new PrintWriter(writer);
+        			} catch(IOException e) {
+        				fault = true;
+       					log.log(Level.INFO, "[" + program + "] No metafile found (" + metafile + ")");
+        			}
         		}
-            	
-            	//log.log(Level.INFO, "testing testin 1 2 3");
-        		/*
-        		[{"msg":"x_goober_x","world":"world","dimension":"DIM0","x":0,"y":-4965,"z":70,"id":4},
-        		 {"msg":"sean_ob","world":"world","dimension":"DIM0","x":0,"y":-5191,"z":86,"id":4}]
-				*/
-        		if (Bukkit.getServer().getOnlinePlayers().size() != 0 ) {
+
+        		// write out player world, dimension and location
+        		if (Bukkit.getServer().getOnlinePlayers().size() != 0 && !fault) {
         			pw.print("[");
         			int i = 0;
         			for(Player p : Bukkit.getServer().getOnlinePlayers()){
@@ -89,21 +91,27 @@ public class OBMetaProducer extends JavaPlugin {
         					int zob = rand.nextInt(range); if (zob%2 == 0) {z+=zob;}else{z-=zob;}
         					int yob = rand.nextInt(40); if(yob%2 == 0) {y+=yob;}else{y-=yob;} if (y > 256) y=255; if (y<0) y=0; 
         				}
-        				//pw.println(i.getName()+ ":" + i.getWorld().getName()+":"+i.getLocation().getX() + ":" + i.getLocation().getY() + ":" + i.getLocation().getZ());
-        				pw.print(	"{\"msg\":\""+p.getName()+"\","+
+        				pw.print("{"+
+        						"\"msg\":\""+p.getName()+"\","+
         						"\"uuid\":\""+p.getUniqueId()+"\","+
-            		            "\"world\":\""+p.getWorld().getName()+"\","+
-    						    "\"dimension\":\""+p.getWorld().getEnvironment().getId()+"\","+
+    						    "\"world\":\""+p.getWorld().getName()+"\","+
+    						    "\"id\":\""+p.getWorld().getEnvironment().name()+"\","+
             		            "\"x\":\""+x+"\","+
     						    "\"y\":\""+y+"\","+
-            		            "\"z\":\""+z+"\"}");
+            		            "\"z\":\""+z+
+            		            "\"}"
+        				);
         				if (i < Bukkit.getServer().getOnlinePlayers().size() ) { pw.print(",");}
         			}
-            	pw.print("]");
+        			pw.print("]");
         		} else {
-        			pw.print("[]");
+        			if (!fault) {
+        				pw.print("[]");
+        			}
         		}
-           		pw.close();
+        		if (!fault) {
+        			pw.close();
+        		}
             }
         }, 0L, 100L);
 		
@@ -112,45 +120,19 @@ public class OBMetaProducer extends JavaPlugin {
 
 	@Override
 	public void onDisable() {
-		
-		//close file
-		//pw.close();
 		Bukkit.getLogger().info("[" + program + "] Unloaded");
 	}
 
 
 	/**
-	 * Load default config
+	 * Initialize Stuff
 	 */
-	public void loadConfig() {
-		if (new File("plugins/" + program + "/config.yml").exists()) {
-			//log.log(Level.INFO, "[OBMetaProducer] config.yml successfully loaded.");
-		} else {
-			saveDefaultConfig();
-			log.log(Level.INFO, "[" + program + "] New config.yml has been created.");
-		}
-	}
-	
-	public boolean manageConfigs() {
-		loadConfig();
-		try {
-			mlc = new OBMetaLoader(this);
-		} catch (Exception e) {
-			log.log(Level.WARNING, "[" + program + "] Error occurred while loading config.");
-			e.printStackTrace();
-			this.getServer().getPluginManager().disablePlugin(this);
-			return false;
-		}
-		log.log(Level.INFO, "[" + program + "] Loaded configuration");
-		return true;
-	}
-
-	public void Initialize() {
+	public void initializeStuff() {
+		this.saveDefaultConfig();
 		Configuration config = this.getConfig();
-		// Message stuff
-		//this.messagesEnabled = config.getBoolean("MessageOptions.Enabled");
+
 		this.metafile = config.getString("MetaFile.Filename");
-        this.obsfucate = config.getBoolean("Options.Obsfucate");
+		this.obsfucate = config.getBoolean("Options.Obsfucate");
         this.range = config.getInt("Options.Range");
         log.log(Level.INFO, "[" + program + "] Metadata output in "+metafile);
         log.log(Level.INFO, "[" + program + "] Player positon masking is set to "+obsfucate);
@@ -158,8 +140,8 @@ public class OBMetaProducer extends JavaPlugin {
         	log.log(Level.INFO, "[" + program + "] Masking range is "+range+" blocks");
         }
 	}
-
-	public void Register() {
+	
+	public void registerStuff() {
 
 	}
 }

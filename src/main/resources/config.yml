@@ -2,4 +2,6 @@
 #
 
 MetaFile:
-  Filename: 'plugins/OBMetaProducer/OBMetaProducer.dat'
+  Filename: 'plugins/OBMetaProducerBukkit/OBMetaProducer.dat'
+Options:
+  Obsfucate: false
