@@ -92,6 +92,7 @@ public class OBMetaProducer extends JavaPlugin {
         					int yob = rand.nextInt(40); if(yob%2 == 0) {y+=yob;}else{y-=yob;} if (y > 256) y=255; if (y<0) y=0; 
         				}
         				pw.print("{"+
+        						"\"sys\":\"spigot\","+
         						"\"msg\":\""+p.getName()+"\","+
         						"\"uuid\":\""+p.getUniqueId()+"\","+
     						    "\"world\":\""+p.getWorld().getName()+"\","+
