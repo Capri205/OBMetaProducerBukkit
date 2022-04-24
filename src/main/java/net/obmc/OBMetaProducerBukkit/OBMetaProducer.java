@@ -121,6 +121,18 @@ public class OBMetaProducer extends JavaPlugin {
 
 	@Override
 	public void onDisable() {
+		// open the meta file for writing
+		File mfile = new File(metafile);
+		FileWriter writer = null;
+		try {
+			writer = new FileWriter(mfile, false);
+			pw = new PrintWriter(writer);
+			pw.print("[]");
+			pw.close();	
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		Bukkit.getLogger().info("[" + program + "] Unloaded");
 	}
 
