@@ -5,4 +5,4 @@ For now this only outputs player position data every 5 seconds for use with play
 
 This is very specific to our needs and setup so of not much value to anyone out there I would think.
 
-Compiled for Bukkit/Spigot/Minecraft 1.18 and compiled with Java 17.
+Compiled for Bukkit/Spigot/Minecraft 1.20 and compiled with Java 17.
