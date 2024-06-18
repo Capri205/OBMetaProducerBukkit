@@ -1,7 +1,7 @@
 website: http://ob-mc.net
 name: OBMetaProducerBukkit
 version: 1.0
-api-version: 1.20
+api-version: "1.21"
 author: Fahrenheit451
 main: net.obmc.OBMetaProducerBukkit.OBMetaProducer
 description: Gather data from a server for use externally - maps, monitoring etc
