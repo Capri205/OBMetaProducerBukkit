@@ -1,7 +1,8 @@
 # Config file for OBMetaProducer
 #
 
-MetaFile:
-  Filename: 'plugins/OBMetaProducerBukkit/OBMetaProducer.dat'
-Options:
-  Obsfucate: false
+metafile:
+  name: 'OBMetaProducer.dat'
+options:
+  obsfucate: false
+  range: 1000

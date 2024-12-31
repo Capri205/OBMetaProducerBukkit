@@ -1,9 +1,9 @@
 package net.obmc.OBMetaProducerBukkit;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -16,145 +16,113 @@ import org.bukkit.scheduler.BukkitScheduler;
 
 
 public class OBMetaProducer extends JavaPlugin {
-	
+
 	Logger log = Logger.getLogger("Minecraft");
 
-	private String metafile;
+	private static String plugin = "OBMetaProducer";
+	private static String pluginPrefix = "[" + plugin + "]";
+	private static String logMsgPrefix = pluginPrefix + " » ";
+
+    private String metaFileName;
+    private File metaFile;
 	private Boolean obsfucate;
 	private Integer range;
 	private Boolean fault = false;
-	public static String program = "OBMetaProducerBukkit";
-	
-	PrintWriter pw = null;
 
 	@Override
 	public void onEnable() {
-		
-		/**
-		 * Initialize Stuff
-		 */
-		initializeStuff();
-		/**
-		 * Register stuff
-		 */
-		registerStuff();
-		/**
-		 * Output message
-		 */
-		log.log(Level.INFO, "[" + program + "] Plugin Version " + this.getDescription().getVersion() + " activated");
 
-	
+		loadConfig();
+
+		log.log(Level.INFO, logMsgPrefix + "Plugin Version " + this.getDescription().getVersion() + " activated");
+		metaFile = getMetafile(this.metaFileName);
+		try {
+		    metaFile.createNewFile();
+		} catch (IOException e) {
+		    log.log(Level.INFO, logMsgPrefix + "Failed to create metafile: (" + metaFile + ")");
+		    fault = true;
+		}
+
 		// enable the task
 		BukkitScheduler scheduler = Bukkit.getServer().getScheduler();
-		
-		//scheduler.scheduleSyncRepeatingTask(this, task, 0L, 200L);
-        scheduler.scheduleSyncRepeatingTask(this, new Runnable() {
-            @Override
-            public void run() {
-            	
-            	// indicates if we have an issue at any point
-            	fault = false;
-            	
-        		// open the meta file for writing
-        		File mfile = new File(metafile);
-        		try {
-					mfile.createNewFile();
-				} catch (IOException e) {
-					log.log(Level.INFO, "[" + program + "] Failed to create metafile: (" + metafile + ")");
-					log.log(Level.INFO, "[" + program + "] Please check the path and filename in the config is correct");
-					fault = true;
-				}
-        		FileWriter writer;
-        		if (!fault) {
-        			try {
-        				writer = new FileWriter(mfile, false);
-        				pw = new PrintWriter(writer);
-        			} catch(IOException e) {
-        				fault = true;
-       					log.log(Level.INFO, "[" + program + "] No metafile found (" + metafile + ")");
-        			}
-        		}
+        scheduler.scheduleSyncRepeatingTask(this, () -> {
 
-        		// write out player world, dimension and location
-        		if (Bukkit.getServer().getOnlinePlayers().size() != 0 && !fault) {
-        			pw.print("[");
-        			int i = 0;
-        			for(Player p : Bukkit.getServer().getOnlinePlayers()){
-        				i++;
-        				//get player location
-        				int x = (int) p.getLocation().getX(); int y = (int) p.getLocation().getY(); int z = (int) p.getLocation().getZ();
+            if (fault) return;
+            	    
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(metaFile, false))) {
+                    
+                if (Bukkit.getServer().getOnlinePlayers().size() != 0) {
 
-        				// add any required player position obsfucation
-        				if (obsfucate) {
-        					Random rand = new Random();
-        					int xob = rand.nextInt(range); if (xob%2 == 0) {x+=xob;}else{x-=xob;} 
-        					int zob = rand.nextInt(range); if (zob%2 == 0) {z+=zob;}else{z-=zob;}
-        					int yob = rand.nextInt(40); if(yob%2 == 0) {y+=yob;}else{y-=yob;} if (y > 256) y=255; if (y<0) y=0; 
-        				}
-        				pw.print("{"+
-        						"\"sys\":\"spigot\","+
-        						"\"msg\":\""+p.getName()+"\","+
-        						"\"uuid\":\""+p.getUniqueId()+"\","+
-    						    "\"world\":\""+p.getWorld().getName()+"\","+
-    						    "\"id\":\""+p.getWorld().getEnvironment().name()+"\","+
-            		            "\"x\":\""+x+"\","+
-    						    "\"y\":\""+y+"\","+
-            		            "\"z\":\""+z+
-            		            "\"}"
-        				);
-        				if (i < Bukkit.getServer().getOnlinePlayers().size() ) { pw.print(",");}
-        			}
-        			pw.print("]");
-        		} else {
-        			if (!fault) {
-        				pw.print("[]");
-        			}
-        		}
-        		if (!fault) {
-        			pw.close();
-        		}
+                    writer.write("[");
+                    int i = 0;
+                    for (Player player : Bukkit.getServer().getOnlinePlayers()) {
+                        i++;
+                        int x = (int) player.getLocation().getX();
+                        int y = (int) player.getLocation().getY();
+                        int z = (int) player.getLocation().getZ();
+                                
+                        // add any required player position obsfucation
+                        if (obsfucate) {
+                            Random rand = new Random();
+                            int xob = rand.nextInt(range); if (xob%2 == 0) {x+=xob;}else{x-=xob;} 
+                            int zob = rand.nextInt(range); if (zob%2 == 0) {z+=zob;}else{z-=zob;}
+                            int yob = rand.nextInt(40); if(yob%2 == 0) {y+=yob;}else{y-=yob;} if (y > 256) y=255; if (y<0) y=0; 
+                        }
+
+                        writer.write("{\"sys\":\"spigot\",\"msg\":\"" + player.getName() +
+                            "\",\"uuid\":\"" + player.getUniqueId() + "\"," + "\"world\":\"" +
+                            player.getWorld().getName() + "\",\"id\":\"" +
+                            player.getWorld().getEnvironment().name() + "\"," + "\"x\":\"" +
+                            x + "\",\"y\":\"" + y + "\",\"z\":\"" + z + "\"}");
+            	            
+                        if (i < Bukkit.getServer().getOnlinePlayers().size()) {
+                            writer.write(",");
+                        }
+                    }
+                    writer.write("]");
+                            
+                } else {
+                    writer.write("[]");
+                }
+
+                writer.flush();
+
+            } catch(IOException e) {
+                log.log(Level.SEVERE, logMsgPrefix + "Failed to write to metafile: (" + metaFile + ")");
+                fault = true;
             }
         }, 0L, 100L);
-		
-
 	}
 
 	@Override
 	public void onDisable() {
-		// open the meta file for writing
-		File mfile = new File(metafile);
-		FileWriter writer = null;
-		try {
-			writer = new FileWriter(mfile, false);
-			pw = new PrintWriter(writer);
-			pw.print("[]");
-			pw.close();	
+	    try (BufferedWriter writer = new BufferedWriter(new FileWriter(metaFile, false))) {
+	        writer.write("[]");
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
+		    log.log(Level.SEVERE, logMsgPrefix + "Failed to write to metafile on plugin disable");
 			e.printStackTrace();
 		}
-		Bukkit.getLogger().info("[" + program + "] Unloaded");
+		Bukkit.getLogger().info(logMsgPrefix + "Unloaded");
 	}
 
-
-	/**
-	 * Initialize Stuff
-	 */
-	public void initializeStuff() {
+	public void loadConfig() {
 		this.saveDefaultConfig();
 		Configuration config = this.getConfig();
-
-		this.metafile = config.getString("MetaFile.Filename");
-		this.obsfucate = config.getBoolean("Options.Obsfucate");
-        this.range = config.getInt("Options.Range");
-        log.log(Level.INFO, "[" + program + "] Metadata output in "+metafile);
-        log.log(Level.INFO, "[" + program + "] Player positon masking is set to "+obsfucate);
+	    this.metaFileName = config.getString("metafile.name") != null ? config.getString("metafile.name") : "OBMetaProducer.dat";
+		this.obsfucate = config.getBoolean("options.obsfucate") ? config.getBoolean("options.obsfucate") : false;
+        this.range = config.getInt("options.range") != 0 ? config.getInt("options.range") : 1000;
+        log.log(Level.INFO, logMsgPrefix + "Metadata output in "+metaFileName);
+        log.log(Level.INFO, logMsgPrefix + "Player positon masking is set to "+obsfucate);
         if (obsfucate) {
-        	log.log(Level.INFO, "[" + program + "] Masking range is "+range+" blocks");
+        	log.log(Level.INFO, logMsgPrefix + "Masking range is "+range+" blocks");
         }
 	}
 	
-	public void registerStuff() {
-
-	}
+	 private File getMetafile(String path) {
+	     File file = new File(path);
+	     if (!file.isAbsolute()) {
+	         file = new File(getDataFolder(), path);
+	     }
+         return file;
+     }
 }

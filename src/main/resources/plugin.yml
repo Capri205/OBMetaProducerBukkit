@@ -1,7 +1,7 @@
-website: http://ob-mc.net
-name: OBMetaProducerBukkit
-version: 1.0
-api-version: "1.21"
-author: Fahrenheit451
+name: ${project.name}
+description: ${project.description}
+author: Fahrenheit451|Capri205
+website: ${project.url}
+version: ${project.version}
+api-version: ${api-version}
 main: net.obmc.OBMetaProducerBukkit.OBMetaProducer
-description: Gather data from a server for use externally - maps, monitoring etc
